@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer');
 
 (async () => {
-    
-    const browser = await puppeteer.launch({headless : false});
+
+    const browser = await puppeteer.launch({ headless: false });
 
     const page = await browser.newPage();
 
@@ -14,42 +14,46 @@ const puppeteer = require('puppeteer');
 
     await page.waitForSelector(".grid-container");
 
-    page.on('response', async (response) => {
-        
-        if (response.url().includes('productsArray?categoryId')) {
-          
-            const responseData = await response.json();
-
-            responseData["products"].forEach(product => {
-
-                try{
-
-                    let objProduct = {
-                        name : product["name"],
-                        price : product["bundleProductSummaries"][0]["detail"]["colors"][0]["sizes"][0]["price"],
-                        img : product["bundleProductSummaries"][0]["detail"]["colors"][0]["image"]["url"]
-                    }
-
-                    console.log(objProduct);
-
-                }
-                catch{
-
-                }
-                
-
-            });
-
-        }
-        
-    });
-
     let initialPageHeight = await page.evaluate(() => document.body.scrollHeight);
 
     const scrollAmount = 1000;
 
-    while(true) {
-        
+    const data = [];
+
+    while (true) {
+
+        const liData = await page.$$eval('ul.grid-container li', liElements => {
+
+            const data = [];
+
+            liElements.forEach(li => {
+
+                try{
+                    const imageSrc = li.querySelector('img.image-item').getAttribute('src');
+                    const paragraphText = li.querySelector('div.product-text > p').textContent;
+                    const price = li.querySelector('span.current-price-elem').textContent;
+
+                    data.push({
+                        imageSrc,
+                        paragraphText,
+                        price
+                    });
+                    
+                }
+                catch{ }
+                
+            });
+
+            return data;
+
+        });
+
+        const diff = liData.filter(item => !data.some(prevItem => prevItem.imageSrc === item.imageSrc));
+
+        diff.forEach(element => {
+            data.push(element);
+        });
+
         await page.evaluate((scrollAmount) => {
 
             window.scrollBy(0, scrollAmount);
@@ -57,7 +61,7 @@ const puppeteer = require('puppeteer');
         }, scrollAmount);
 
         try {
-            
+
             await page.waitForFunction(`document.body.scrollHeight > ${initialPageHeight}`, { timeout: 5000 });
 
         } catch (error) {
@@ -66,10 +70,11 @@ const puppeteer = require('puppeteer');
             break;
 
         }
-        
+
         initialPageHeight = await page.evaluate(() => document.body.scrollHeight);
     }
 
+    console.log(data.length);
     await browser.close();
 
 })();
