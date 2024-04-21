@@ -1,92 +1,20 @@
-import puppeteer from "puppeteer";
+import Scraper from "./lib/Scrapper";
+import { Paths, Data } from "./lib/Scrapper";
 
-interface Paths {
-    berskaUrl : string
-    pullUrl : string
-    zalandoUrl : string
+const PATHS : Paths = {
+    berskaUrl : "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html",
+    zalandoUrl : "",
+    pullUrl : ""
 }
 
-interface Collected {
-    name : string | undefined
-    price : string | undefined
-    image : string | undefined
-}
+let scrapper = new Scraper(PATHS);
 
-interface Data {
-    berskaData : Collected[]
-    pullData : Collected[]
-    zalandoData : Collected[]
-}
+scrapper.start().then((res : Data) => {
 
-class Scraper{
+    console.log(res);
 
-    private path : Paths;
+}).catch(err => {
 
-    constructor(path : Paths){
+    console.log(err);
 
-        this.path = path;
-
-    }
-
-    async start(){
-        
-        let collect : Collected[][] = await this.scraping();
-        
-        let data : Data = {
-
-            berskaData : collect[0],
-            pullData : collect[1],
-            zalandoData : collect[2],
-
-        }
-
-        return data;
-
-
-    }
-
-    async scraping() : Promise<Collected[][]>{
-
-        return Promise.all(
-            [
-            this.berskaScraping(this.path.berskaUrl),
-            this.pullScraping(this.path.pullUrl),
-            this.zalandoScraping(this.path.zalandoUrl)
-        ])
-
-    }
-
-    async berskaScraping(url : string) : Promise<Collected[]> {
-
-        return new Promise((resolve, reject) => {
-
-            let data : Collected[] = [];
-
-            
-
-            return data;
-
-
-        })
-        
-    }
-
-    async pullScraping(url : string) : Promise<Collected[]> {
-
-        let data : Collected[] = [];
-
-
-        return data;
-
-    }
-
-    async zalandoScraping(url : string) : Promise<Collected[]> {
-
-        let data : Collected[] = [];
-
-
-        return data;
-
-    }
-
-}
+});
