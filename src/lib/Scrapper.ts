@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, ElementHandle } from "puppeteer";
 
 export interface Paths {
     berskaUrl : string
@@ -47,8 +47,8 @@ export default class Scraper{
         return Promise.all(
             [
             this.berskaScraping(this.path.berskaUrl, browser),
-            this.pullScraping(this.path.pullUrl, browser),
-            this.zalandoScraping(this.path.zalandoUrl, browser)
+            //this.pullScraping(this.path.pullUrl, browser),
+            //this.zalandoScraping(this.path.zalandoUrl, browser)
         ]);        
 
     }
@@ -125,13 +125,71 @@ export default class Scraper{
         
     }
 
-    async pullScraping(url : string, browser : Browser) : Promise<Collected[]> {
+    async pullScraping() : Promise<Collected[]> {
 
-        return new Promise((resolve, reject) => {
-            let data : Collected[] = [];
-            resolve(data);
-        })
+        const browser = await puppeteer.launch({ headless: false });
+
+        const url = "https://www.pullandbear.com/es/hombre/ropa/camisetas-n6323";
+
+        const page = await browser.newPage();
+
+        await page.goto(url);
+
+        await page.waitForSelector("#onetrust-accept-btn-handler")
+
+        await page.click('#onetrust-accept-btn-handler')
+
+        await page.waitForSelector("grid-generator");
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        while (true) {
         
+            let initialPageHeight = await page.evaluate(() => document.body.scrollHeight);
+
+            let targetElement = await page.$('.m-seo');
+            let boundingBox = await targetElement!.boundingBox();
+
+            await page.evaluate((scrollAmount) => {
+
+                window.scrollBy(0, scrollAmount);
+        
+            }, boundingBox!.y - 800);
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            let finalPageHeight = await page.evaluate(() => document.body.scrollHeight);
+
+            if(initialPageHeight == finalPageHeight) break;
+
+        }
+
+        const collected : Collected[] = await page.$$eval('legacy-product', (liElements : any) => {
+
+            let tmp : Collected[] = [];
+
+            liElements.forEach((li : HTMLElement) => {
+
+                let collect : Collected = {
+                    image : li.querySelector('img.image-responsive')?.getAttribute('src') || null,
+                    name : li.querySelector('div.name > span')?.textContent || null,
+                    price : li.querySelector('div.product-price > div')?.textContent || null
+                }
+
+                tmp.push(collect);
+                
+                
+            });
+
+            return tmp;
+
+        });
+
+        await browser.close();
+
+        console.log(collected.length)
+
+        return collected;
 
     }
 

@@ -6,12 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Scrapper_1 = __importDefault(require("./lib/Scrapper"));
 const PATHS = {
     berskaUrl: "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html",
-    zalandoUrl: "",
+    zalandoUrl: "https://www.pullandbear.com/es/hombre/ropa/camisetas-n6323",
     pullUrl: ""
 };
 let scrapper = new Scrapper_1.default(PATHS);
-scrapper.start().then((res) => {
+scrapper.pullScraping().then((res) => {
     console.log(res);
-}).catch(err => {
-    console.log(err);
 });
+// scrapper.start().then((res : Data) => {
+//     console.log(res);
+// }).catch(err => {
+//     console.log(err);
+// });
