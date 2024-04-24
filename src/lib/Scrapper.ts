@@ -1,4 +1,4 @@
-import puppeteer, { Browser, ElementHandle } from "puppeteer";
+import puppeteer, { Browser, ElementHandle, HTTPResponse } from "puppeteer";
 
 export interface Paths {
     berskaUrl : string
@@ -46,16 +46,18 @@ export default class Scraper{
 
         return Promise.all(
             [
-            this.berskaScraping(this.path.berskaUrl, browser),
+            // this.berskaScraping(this.path.berskaUrl, browser),
             //this.pullScraping(this.path.pullUrl, browser),
             //this.zalandoScraping(this.path.zalandoUrl, browser)
         ]);        
 
     }
 
-    async berskaScraping(url : string, browser : Browser) : Promise<Collected[]> {
+    async berskaScraping() : Promise<Collected[]> {
         
-        let collected : Collected[] = [];
+        const browser = await puppeteer.launch({ headless: false });
+
+        const url = "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html";
 
         const page = await browser.newPage();
 
@@ -65,41 +67,41 @@ export default class Scraper{
 
         await page.click('#onetrust-accept-btn-handler')
 
-        await page.waitForSelector(".grid-container");
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        let collected : Collected[] = [];
+
+        let images : string[] = [];
+
+        page.on('response', async (response : HTTPResponse) => {
+
+            if(response.url().includes('https://static.bershka.net/4/photos2')) images.push(response.url());
+            
+            if(response.url().includes('productsArray?categoryId')){
+
+                let res = await response.json();
+
+                res.products.forEach((product : any) => {
+
+                    try{
+                        collected.push({
+                            image : null,
+                            price : parseInt(product.bundleProductSummaries[0].detail.colors[0].sizes[0].price) / 100 + "" || null,
+                            name : product.name
+                        });
+                    }catch{}
+                    
+
+                });
+
+            }
+
+        });
 
         let initialPageHeight : number = await page.evaluate(() => document.body.scrollHeight);
-
         const scrollAmount : number = 1000;
 
         while (true) {
-
-            const liData = await page.$$eval('ul.grid-container li', (liElements : HTMLElement[]) => {
-
-                let tmp : Collected[] = [];
-
-                liElements.forEach((li : HTMLElement) => {
-
-                    let collect : Collected = {
-                        image : li.querySelector('img.image-item')?.getAttribute('src') || null,
-                        name : li.querySelector('div.product-text > p')?.textContent || null,
-                        price : li.querySelector('span.current-price-elem')?.textContent || null
-                    }
-
-                    if(collect.image != null && collect.name != null && collect.price != null){
-                        tmp.push(collect);
-                    }
-                    
-                });
-
-                return tmp;
-
-            });
-
-            const diff : Collected[] = liData.filter(item => !collected.some((prevItem : Collected) => prevItem.image === item.image));
-
-            diff.forEach(element => {
-                collected.push(element);
-            });
 
             await page.evaluate((scrollAmount) => {
 
@@ -121,6 +123,12 @@ export default class Scraper{
 
         }
 
+        collected = collected.map((item, index) => {
+            return {...item,image: images[index]};
+        });        
+
+        await browser.close();
+        
         return collected;
         
     }
@@ -141,7 +149,31 @@ export default class Scraper{
 
         await page.waitForSelector("grid-generator");
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        let collected : Collected[] = [];
+
+        let images : string[] = [];
+
+        page.on('response', async (response : HTTPResponse) => {
+
+            if(response.url().includes('https://static.pullandbear.net/2/photos')) images.push(response.url());
+            
+            if(response.url().includes('productsArray?languageId=-5&productIds')){
+
+                let res = await response.json();
+
+                res.products.forEach((product : any) => {
+
+                    collected.push({
+                        image : null,
+                        price : parseInt(product.bundleProductSummaries[0].detail.colors[0].sizes[0].price) / 100 + "",
+                        name : product.name
+                    });
+
+                });
+
+            }
+
+        });
 
         while (true) {
         
@@ -164,30 +196,11 @@ export default class Scraper{
 
         }
 
-        const collected : Collected[] = await page.$$eval('legacy-product', (liElements : any) => {
-
-            let tmp : Collected[] = [];
-
-            liElements.forEach((li : HTMLElement) => {
-
-                let collect : Collected = {
-                    image : li.querySelector('img.image-responsive')?.getAttribute('src') || null,
-                    name : li.querySelector('div.name > span')?.textContent || null,
-                    price : li.querySelector('div.product-price > div')?.textContent || null
-                }
-
-                tmp.push(collect);
-                
-                
-            });
-
-            return tmp;
-
-        });
+        collected = collected.map((item, index) => {
+            return {...item,image: images[index]};
+        });        
 
         await browser.close();
-
-        console.log(collected.length)
 
         return collected;
 

@@ -9,9 +9,11 @@ const PATHS : Paths = {
 
 let scrapper = new Scraper(PATHS);
 
-scrapper.pullScraping().then((res : Collected[]) =>{
+scrapper.berskaScraping().then((res : Collected[]) =>{
 
     console.log(res);
+
+    console.log(res.length);
 
 });
 

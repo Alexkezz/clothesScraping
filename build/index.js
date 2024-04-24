@@ -10,8 +10,9 @@ const PATHS = {
     pullUrl: ""
 };
 let scrapper = new Scrapper_1.default(PATHS);
-scrapper.pullScraping().then((res) => {
+scrapper.berskaScraping().then((res) => {
     console.log(res);
+    console.log(res.length);
 });
 // scrapper.start().then((res : Data) => {
 //     console.log(res);
