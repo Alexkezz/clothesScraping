@@ -27,10 +27,12 @@ export default class Scraper{
     }
 
     async start(){
-        
-        const browser = await puppeteer.launch({ headless: false });
-        let collect : Collected[][] = await this.scraping(browser);
-        await browser.close();
+               
+        let collect : Collected[][] = await Promise.all([
+            this.berskaScraping(this.path.berskaUrl),
+            this.pullScraping(this.path.pullUrl),
+            this.zalandoScraping(this.path.zalandoUrl)
+        ]);    
 
         let data : Data = {
             berskaData : collect[0],
@@ -42,22 +44,9 @@ export default class Scraper{
 
     }
 
-    async scraping(browser : Browser) : Promise<Collected[][]>{
+    async berskaScraping(url : string) : Promise<Collected[]> {
 
-        return Promise.all(
-            [
-            // this.berskaScraping(this.path.berskaUrl, browser),
-            //this.pullScraping(this.path.pullUrl, browser),
-            //this.zalandoScraping(this.path.zalandoUrl, browser)
-        ]);        
-
-    }
-
-    async berskaScraping() : Promise<Collected[]> {
-        
-        const browser = await puppeteer.launch({ headless: false });
-
-        const url = "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html";
+        const browser = await puppeteer.launch({headless : false});
 
         const page = await browser.newPage();
 
@@ -126,18 +115,16 @@ export default class Scraper{
         collected = collected.map((item, index) => {
             return {...item,image: images[index]};
         });        
-
-        await browser.close();
         
+        await browser.close();
+
         return collected;
         
     }
 
-    async pullScraping() : Promise<Collected[]> {
+    async pullScraping(url : string) : Promise<Collected[]> {
 
-        const browser = await puppeteer.launch({ headless: false });
-
-        const url = "https://www.pullandbear.com/es/hombre/ropa/camisetas-n6323";
+        const browser = await puppeteer.launch({headless : false});
 
         const page = await browser.newPage();
 
@@ -206,12 +193,56 @@ export default class Scraper{
 
     }
 
-    async zalandoScraping(url : string, browser : Browser) : Promise<Collected[]> {
+    async zalandoScraping(url : string) : Promise<Collected[]> {
 
-        return new Promise((resolve, reject) => {
+        const browser = await puppeteer.launch({headless : false});
+
+        const page = await browser.newPage();
+
+        await page.goto(url);
+
+        await page.evaluate(() => {
+
+            window.scrollBy(0, document.body.scrollHeight);
+
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        let collected : Collected[] = await page.evaluate(() => {
+
+            let prodcutsHandle = document.querySelectorAll("._5qdMrS.w8MdNG.cYylcv.BaerYO._75qWlu.iOzucJ.JT3_zV._Qe9k6");
             let data : Collected[] = [];
-            resolve(data);
-        })
+
+            for(let prd of prodcutsHandle){
+
+                let titleHandle = prd.querySelector("header > div > h3.sDq_FX.lystZ1.FxZV-M.HlZ_Tf.ZkIJC-.r9BRio.qXofat.EKabf7.nBq1-s._2MyPg2");
+                let imageHandle = prd.querySelector("div > div > img");
+
+                let normalPriceHandle = prd.querySelectorAll("section > p > span.sDq_FX.lystZ1.FxZV-M.HlZ_Tf");
+                let offerPriceHandle = prd.querySelectorAll("section > p.sDq_FX.lystZ1.dgII7d.HlZ_Tf > span:nth-child(2)");
+
+                let priceHandle = normalPriceHandle.length > 0 ? normalPriceHandle : offerPriceHandle
+                
+                if(titleHandle && imageHandle && priceHandle.length > 0){
+
+                    data.push({
+                        name : titleHandle.textContent,
+                        price : priceHandle[0].textContent,
+                        image : (imageHandle as HTMLImageElement).src
+                    });
+
+                }
+
+            }
+
+            return data;
+
+        });
+
+        await browser.close();
+
+        return collected;
 
     }
 

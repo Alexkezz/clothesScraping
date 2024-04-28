@@ -3,27 +3,16 @@ import { Paths, Data } from "./lib/Scrapper";
 
 const PATHS : Paths = {
     berskaUrl : "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html",
-    zalandoUrl : "https://www.pullandbear.com/es/hombre/ropa/camisetas-n6323",
-    pullUrl : ""
+    pullUrl : "https://www.pullandbear.com/es/hombre/ropa/camisetas-n6323",
+    zalandoUrl : "https://www.zalando.es/ropa-hombre-camisetas/"
 }
 
 let scrapper = new Scraper(PATHS);
 
-scrapper.berskaScraping().then((res : Collected[]) =>{
+console.log("START SCRAPPING...")
 
+scrapper.start().then((res : Data) => {
     console.log(res);
-
-    console.log(res.length);
-
+}).catch(err => {
+    console.log(err);
 });
-
-
-// scrapper.start().then((res : Data) => {
-
-//     console.log(res);
-
-// }).catch(err => {
-
-//     console.log(err);
-
-// });
