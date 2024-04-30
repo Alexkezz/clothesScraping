@@ -46,46 +46,45 @@ export default class Scraper{
 
     async berskaScraping(url : string) : Promise<Collected[]> {
 
-        const browser = await puppeteer.launch({headless : false});
+        const browser = await puppeteer.launch({headless : true});
 
         const page = await browser.newPage();
 
-        await page.goto(url);
-
-        await page.waitForSelector("#onetrust-accept-btn-handler")
-
-        await page.click('#onetrust-accept-btn-handler')
-
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        let images : string[] = [];
 
         let collected : Collected[] = [];
 
-        let images : string[] = [];
-
         page.on('response', async (response : HTTPResponse) => {
 
-            if(response.url().includes('https://static.bershka.net/4/photos2')) images.push(response.url());
+            if(response.url().includes('https://static.bershka.net/4/photos2') && response.url().includes("pg?imwidth=750")) images.push(response.url());
             
             if(response.url().includes('productsArray?categoryId')){
 
-                let res = await response.json();
+                let products = await response.json();
 
-                res.products.forEach((product : any) => {
+                for(let product of products.products){
 
-                    try{
-                        collected.push({
-                            image : null,
-                            price : parseInt(product.bundleProductSummaries[0].detail.colors[0].sizes[0].price) / 100 + "" || null,
-                            name : product.name
-                        });
-                    }catch{}
+                    let image : string | null = null;
+                    let name : string | null = product.name;
+                    let price: string | null = parseInt(product.bundleProductSummaries[0]?.detail.colors[0]?.sizes[0]?.price) / 100 + "" || null;
+
+                    collected.push({
+                        image : image,
+                        price : price,
+                        name : name
+                    });
                     
-
-                });
+                }
 
             }
 
         });
+
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36');
+
+        await page.setViewport({width: 800, height: 600})
+
+        await page.goto(url, { waitUntil: 'networkidle0' });
 
         let initialPageHeight : number = await page.evaluate(() => document.body.scrollHeight);
         const scrollAmount : number = 1000;
@@ -124,43 +123,48 @@ export default class Scraper{
 
     async pullScraping(url : string) : Promise<Collected[]> {
 
-        const browser = await puppeteer.launch({headless : false});
+        const browser = await puppeteer.launch({headless : true});
 
         const page = await browser.newPage();
 
-        await page.goto(url);
-
-        await page.waitForSelector("#onetrust-accept-btn-handler")
-
-        await page.click('#onetrust-accept-btn-handler')
-
-        await page.waitForSelector("grid-generator");
+        let images : string[] = [];
 
         let collected : Collected[] = [];
 
-        let images : string[] = [];
-
         page.on('response', async (response : HTTPResponse) => {
 
-            if(response.url().includes('https://static.pullandbear.net/2/photos')) images.push(response.url());
-            
+
+            if(response.url().includes('https://static.pullandbear.net/2/photos/') && (response.url().includes('imwidth=1920') || response.url().includes('&imwidth=750') || response.url().includes('&imwidth=850') || response.url().includes('imwidth=563'))){
+                images.push(response.url());
+            } 
+
             if(response.url().includes('productsArray?languageId=-5&productIds')){
 
-                let res = await response.json();
+                let products = await response.json();
 
-                res.products.forEach((product : any) => {
+                for(let product of products.products){
+
+                    let image : string | null = null;
+                    let name : string | null = product.name;
+                    let price: string | null = parseInt(product.bundleProductSummaries[0]?.detail.colors[0]?.sizes[0]?.price) / 100 + "" || null;
 
                     collected.push({
-                        image : null,
-                        price : parseInt(product.bundleProductSummaries[0].detail.colors[0].sizes[0].price) / 100 + "",
-                        name : product.name
+                        image : image,
+                        price : price,
+                        name : name
                     });
 
-                });
+                }
 
             }
 
         });
+
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36');
+
+        await page.setViewport({width: 800, height: 600})
+
+        await page.goto(url, { waitUntil: 'networkidle0' });
 
         while (true) {
         
@@ -173,9 +177,9 @@ export default class Scraper{
 
                 window.scrollBy(0, scrollAmount);
         
-            }, boundingBox!.y - 800);
+            }, boundingBox!.y - 850);
 
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 800));
 
             let finalPageHeight = await page.evaluate(() => document.body.scrollHeight);
 

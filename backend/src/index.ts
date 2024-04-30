@@ -11,8 +11,14 @@ let scrapper = new Scraper(PATHS);
 
 console.log("START SCRAPPING...")
 
-scrapper.start().then((res : Data) => {
+scrapper.pullScraping(PATHS.pullUrl).then((res : Collected[])  => {
+
     console.log(res);
-}).catch(err => {
-    console.log(err);
-});
+
+})
+
+// scrapper.start().then((res : Data) => {
+//     console.log(res);
+// }).catch(err => {
+//     console.log(err);
+// });
