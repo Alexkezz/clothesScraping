@@ -1,5 +1,6 @@
 import Scraper, { Collected } from "./lib/Scrapper";
 import { Paths, Data } from "./lib/Scrapper";
+import { Express } from "express";
 
 const PATHS : Paths = {
     berskaUrl : "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html",
@@ -8,17 +9,3 @@ const PATHS : Paths = {
 }
 
 let scrapper = new Scraper(PATHS);
-
-console.log("START SCRAPPING...")
-
-scrapper.pullScraping(PATHS.pullUrl).then((res : Collected[])  => {
-
-    console.log(res);
-
-})
-
-// scrapper.start().then((res : Data) => {
-//     console.log(res);
-// }).catch(err => {
-//     console.log(err);
-// });
