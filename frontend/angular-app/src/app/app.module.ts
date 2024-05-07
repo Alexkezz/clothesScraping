@@ -3,20 +3,19 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { DashboardComponent } from './modules/dashboard/dashboard.component';
-import { PagesComponent } from './features/dashboard/pages/pages.component';
-import { SpinnerComponent } from './shared/components/spinner/spinner.component';
+
+import { DashboardModule } from './features/dashboard/dashboard.module';
+import { DashboardRouting } from './features/dashboard/dashboard-routing';
+
 
 @NgModule({
   declarations: [
     AppComponent,
-    DashboardComponent,
-    PagesComponent,
-    SpinnerComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    DashboardModule,
   ],
   providers: [],
   bootstrap: [AppComponent]

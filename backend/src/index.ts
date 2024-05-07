@@ -1,6 +1,9 @@
-import Scraper, { Collected } from "./lib/Scrapper";
+import Scraper from "./lib/Scrapper";
 import { Paths, Data } from "./lib/Scrapper";
-import { Express } from "express";
+import express from "express";
+
+const PORT = 3000;
+const app = express();
 
 const PATHS : Paths = {
     berskaUrl : "https://www.bershka.com/es/hombre/ropa/camisetas-c1010193239.html",
@@ -9,3 +12,15 @@ const PATHS : Paths = {
 }
 
 let scrapper = new Scraper(PATHS);
+
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    console.log("Connected!")
+});
+
+app.listen(PORT, () => {
+
+    console.log(`Running on port ${PORT}`);
+
+});

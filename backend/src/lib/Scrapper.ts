@@ -144,15 +144,18 @@ export default class Scraper{
 
                 for(let product of products.products){
 
-                    let image : string | null = null;
-                    let name : string | null = product.name;
-                    let price: string | null = parseInt(product.bundleProductSummaries[0]?.detail.colors[0]?.sizes[0]?.price) / 100 + "" || null;
-
-                    collected.push({
-                        image : image,
-                        price : price,
-                        name : name
-                    });
+                    try{
+                        let image : string | null = null;
+                        let name : string | null = product.name;
+                        let price: string | null = parseInt(product.bundleProductSummaries[0]?.detail.colors[0]?.sizes[0]?.price) / 100 + "" || null;
+    
+                        collected.push({
+                            image : image,
+                            price : price,
+                            name : name
+                        });
+                    }catch{}
+                    
 
                 }
 
@@ -199,7 +202,7 @@ export default class Scraper{
 
     async zalandoScraping(url : string) : Promise<Collected[]> {
 
-        const browser = await puppeteer.launch({headless : false});
+        const browser = await puppeteer.launch({headless : true});
 
         const page = await browser.newPage();
 
